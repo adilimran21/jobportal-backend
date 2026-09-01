@@ -10,4 +10,6 @@ public interface CandidateProfileRepository
         extends JpaRepository<CandidateProfile, Long> {
 
     Optional<CandidateProfile> findByUser(UserEntity user);
+
+    Optional<CandidateProfile> findByUserEmail(String email);
 }
