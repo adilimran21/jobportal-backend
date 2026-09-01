@@ -1,0 +1,23 @@
+package com.jobportal.backend.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CandidateProfileRequestDTO {
+
+    private String phone;
+
+    private String location;
+
+    private String skills;
+
+    private String experience;
+
+    private String education;
+
+    private String resume;
+}
