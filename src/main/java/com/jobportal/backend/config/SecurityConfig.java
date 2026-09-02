@@ -4,7 +4,7 @@ import com.jobportal.backend.security.JwtAuthenticationFilter;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
@@ -14,60 +14,77 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        public SecurityConfig(
+                        JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+                http
+                                .csrf(csrf -> csrf.disable())
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                        // Public APIs
-                        .requestMatchers(
-                                "/api/users/register",
-                                "/api/users/login",
-                                "/api/jobseeker/jobs"
-                        ).permitAll()
+                                                // Public APIs
+                                                .requestMatchers(
+                                                                "/api/users/register",
+                                                                "/api/users/login",
+                                                                "/api/jobseeker/jobs",
+                                                                "/api/companies",
+                                                                "/api/companies/**")
+                                                .permitAll()
 
-                        // User profile - any authenticated user
-                        .requestMatchers(
-                                "/api/users/profile"
-                        ).authenticated()
+                                                // Categories - public GET
+                                                .requestMatchers(
+                                                                HttpMethod.GET,
+                                                                "/api/categories",
+                                                                "/api/categories/**")
+                                                .permitAll()
 
-                        // Candidate APIs - JOB_SEEKER only
-                        .requestMatchers(
-                                "/api/candidate/**"
-                        ).hasRole("JOB_SEEKER")
+                                                // Categories - RECRUITER only
+                                                .requestMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/categories",
+                                                                "/api/categories/**")
+                                                .hasRole("RECRUITER")
 
-                        // Recruiter APIs - RECRUITER only
-                        .requestMatchers(
-                                "/api/recruiter/**"
-                        ).hasRole("RECRUITER")
+                                                .requestMatchers(
+                                                                HttpMethod.DELETE,
+                                                                "/api/categories",
+                                                                "/api/categories/**")
+                                                .hasRole("RECRUITER")
 
-                        // Everything else requires authentication
-                        .anyRequest().authenticated()
-                )
+                                                // User profile - any authenticated user
+                                                .requestMatchers(
+                                                                "/api/users/profile")
+                                                .authenticated()
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                                                // Candidate APIs - JOB_SEEKER only
+                                                .requestMatchers(
+                                                                "/api/candidate/**")
+                                                .hasRole("JOB_SEEKER")
 
-        return http.build();
-    }
+                                                // Recruiter APIs - RECRUITER only
+                                                .requestMatchers(
+                                                                "/api/recruiter/**")
+                                                .hasRole("RECRUITER")
+
+                                                // Everything else requires authentication
+                                                .anyRequest().authenticated())
+
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
 }

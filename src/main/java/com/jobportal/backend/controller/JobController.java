@@ -19,7 +19,6 @@ public class JobController {
         this.jobService = jobService;
     }
 
-    // RECRUITER - CREATE JOB
     @PostMapping("/recruiter/jobs")
     public ResponseEntity<JobEntity> createJob(
             @RequestBody JobEntity job,
@@ -37,7 +36,6 @@ public class JobController {
         return ResponseEntity.ok(savedJob);
     }
 
-    // JOB SEEKER - GET ALL JOBS
     @GetMapping("/jobseeker/jobs")
     public ResponseEntity<List<JobEntity>> getAllJobs() {
 
@@ -46,7 +44,6 @@ public class JobController {
         );
     }
 
-    // RECRUITER - GET OWN JOBS
     @GetMapping("/recruiter/jobs")
     public ResponseEntity<List<JobEntity>> getRecruiterJobs(
             Authentication authentication) {
@@ -61,17 +58,6 @@ public class JobController {
         );
     }
 
-    // GET JOB BY ID
-    @GetMapping("/jobs/{id}")
-    public ResponseEntity<JobEntity> getJobById(
-            @PathVariable Long id) {
-
-        return ResponseEntity.ok(
-                jobService.getJobById(id)
-        );
-    }
-
-    // UPDATE JOB
     @PutMapping("/recruiter/jobs/{id}")
     public ResponseEntity<JobEntity> updateJob(
             @PathVariable Long id,
@@ -81,31 +67,13 @@ public class JobController {
         String recruiterEmail =
                 authentication.getName();
 
-        return ResponseEntity.ok(
+        JobEntity updatedJob =
                 jobService.updateJob(
                         id,
                         job,
                         recruiterEmail
-                )
-        );
-    }
+                );
 
-    // DELETE JOB
-    @DeleteMapping("/recruiter/jobs/{id}")
-    public ResponseEntity<String> deleteJob(
-            @PathVariable Long id,
-            Authentication authentication) {
-
-        String recruiterEmail =
-                authentication.getName();
-
-        jobService.deleteJob(
-                id,
-                recruiterEmail
-        );
-
-        return ResponseEntity.ok(
-                "Job deleted successfully"
-        );
+        return ResponseEntity.ok(updatedJob);
     }
 }

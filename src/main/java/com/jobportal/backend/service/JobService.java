@@ -1,7 +1,9 @@
 package com.jobportal.backend.service;
 
+import com.jobportal.backend.entity.JobCategory;
 import com.jobportal.backend.entity.JobEntity;
 import com.jobportal.backend.entity.RecruiterProfile;
+import com.jobportal.backend.repository.JobCategoryRepository;
 import com.jobportal.backend.repository.JobRepository;
 import com.jobportal.backend.repository.RecruiterProfileRepository;
 import org.springframework.stereotype.Service;
@@ -13,16 +15,20 @@ public class JobService {
 
     private final JobRepository jobRepository;
     private final RecruiterProfileRepository recruiterProfileRepository;
+    private final JobCategoryRepository jobCategoryRepository;
 
     public JobService(
             JobRepository jobRepository,
-            RecruiterProfileRepository recruiterProfileRepository) {
+            RecruiterProfileRepository recruiterProfileRepository,
+            JobCategoryRepository jobCategoryRepository) {
 
         this.jobRepository = jobRepository;
-        this.recruiterProfileRepository = recruiterProfileRepository;
+        this.recruiterProfileRepository =
+                recruiterProfileRepository;
+        this.jobCategoryRepository =
+                jobCategoryRepository;
     }
 
-    // CREATE JOB
     public JobEntity createJob(
             JobEntity job,
             String recruiterEmail) {
@@ -37,18 +43,33 @@ public class JobService {
                                 )
                         );
 
+        if (job.getCategory() != null) {
+
+            Long categoryId =
+                    job.getCategory().getId();
+
+            JobCategory category =
+                    jobCategoryRepository
+                            .findById(categoryId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Category not found"
+                                    )
+                            );
+
+            job.setCategory(category);
+        }
+
         job.setRecruiter(recruiter);
 
         return jobRepository.save(job);
     }
 
-    // GET ALL JOBS
     public List<JobEntity> getAllJobs() {
 
         return jobRepository.findAll();
     }
 
-    // GET RECRUITER JOBS
     public List<JobEntity> getRecruiterJobs(
             String recruiterEmail) {
 
@@ -56,32 +77,22 @@ public class JobService {
                 .findByRecruiterUserEmail(recruiterEmail);
     }
 
-    // GET JOB BY ID
-    public JobEntity getJobById(Long id) {
-
-        return jobRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Job not found with id: " + id
-                        )
-                );
-    }
-
-    // UPDATE JOB
     public JobEntity updateJob(
-            Long id,
+            Long jobId,
             JobEntity updatedJob,
             String recruiterEmail) {
 
         JobEntity existingJob =
-                jobRepository.findById(id)
+                jobRepository
+                        .findById(jobId)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Job not found with id: " + id
+                                        "Job not found"
                                 )
                         );
 
-        if (!existingJob.getRecruiter()
+        if (!existingJob
+                .getRecruiter()
                 .getUser()
                 .getEmail()
                 .equals(recruiterEmail)) {
@@ -95,36 +106,54 @@ public class JobService {
         existingJob.setCompany(updatedJob.getCompany());
         existingJob.setLocation(updatedJob.getLocation());
         existingJob.setDescription(updatedJob.getDescription());
+        existingJob.setResponsibilities(
+                updatedJob.getResponsibilities()
+        );
         existingJob.setSalary(updatedJob.getSalary());
         existingJob.setJobType(updatedJob.getJobType());
         existingJob.setSkills(updatedJob.getSkills());
+        existingJob.setGoodToHave(
+                updatedJob.getGoodToHave()
+        );
+        existingJob.setQualifications(
+                updatedJob.getQualifications()
+        );
+        existingJob.setExperience(
+                updatedJob.getExperience()
+        );
+        existingJob.setContractType(
+                updatedJob.getContractType()
+        );
+        existingJob.setWorkMode(
+                updatedJob.getWorkMode()
+        );
+        existingJob.setVacancies(
+                updatedJob.getVacancies()
+        );
+        existingJob.setApplicationDeadline(
+                updatedJob.getApplicationDeadline()
+        );
+        existingJob.setPostedDate(
+                updatedJob.getPostedDate()
+        );
 
-        return jobRepository.save(existingJob);
-    }
+        if (updatedJob.getCategory() != null) {
 
-    // DELETE JOB
-    public void deleteJob(
-            Long id,
-            String recruiterEmail) {
+            Long categoryId =
+                    updatedJob.getCategory().getId();
 
-        JobEntity existingJob =
-                jobRepository.findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Job not found with id: " + id
-                                )
-                        );
+            JobCategory category =
+                    jobCategoryRepository
+                            .findById(categoryId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Category not found"
+                                    )
+                            );
 
-        if (!existingJob.getRecruiter()
-                .getUser()
-                .getEmail()
-                .equals(recruiterEmail)) {
-
-            throw new RuntimeException(
-                    "You are not authorized to delete this job"
-            );
+            existingJob.setCategory(category);
         }
 
-        jobRepository.delete(existingJob);
+        return jobRepository.save(existingJob);
     }
 }
