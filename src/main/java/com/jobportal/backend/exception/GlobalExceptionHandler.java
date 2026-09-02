@@ -21,4 +21,16 @@ public class GlobalExceptionHandler {
                         exception.getMessage()
                 ));
     }
+
+    @ExceptionHandler(DuplicateSavedJobException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateSavedJob(
+            DuplicateSavedJobException exception) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of(
+                        "message",
+                        exception.getMessage()
+                ));
+    }
 }
