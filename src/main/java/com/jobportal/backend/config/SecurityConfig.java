@@ -39,6 +39,7 @@ public class SecurityConfig {
                                                                 "/api/users/register",
                                                                 "/api/users/login",
                                                                 "/api/jobseeker/jobs",
+                                                                "/api/jobs/search",
                                                                 "/api/companies",
                                                                 "/api/companies/**")
                                                 .permitAll()

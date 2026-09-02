@@ -20,15 +20,18 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final CandidateProfileRepository candidateProfileRepository;
     private final JobRepository jobRepository;
+    private final NotificationService notificationService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             CandidateProfileRepository candidateProfileRepository,
-            JobRepository jobRepository) {
+            JobRepository jobRepository,
+            NotificationService notificationService) {
 
         this.applicationRepository = applicationRepository;
         this.candidateProfileRepository = candidateProfileRepository;
         this.jobRepository = jobRepository;
+        this.notificationService = notificationService;
     }
 
     public ApplicationResponseDTO applyForJob(
@@ -69,6 +72,16 @@ public class ApplicationService {
 
         Application savedApplication =
                 applicationRepository.save(application);
+
+        notificationService.createNotification(
+                email,
+                "You have successfully applied for "
+                        + job.getTitle()
+                        + " at "
+                        + job.getCompany()
+                        + ". Keep tracking your application for further updates.",
+                "APPLICATION_SUBMITTED"
+        );
 
         return convertToResponseDTO(savedApplication);
     }
