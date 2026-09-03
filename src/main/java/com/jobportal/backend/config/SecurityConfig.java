@@ -38,7 +38,7 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/users/register",
                                                                 "/api/users/login",
-                                                                "/api/jobseeker/jobs",
+                                                                "/api/jobseeker/jobs/**",
                                                                 "/api/jobs/search",
                                                                 "/api/companies",
                                                                 "/api/companies/**")

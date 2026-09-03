@@ -13,147 +13,125 @@ import java.util.List;
 @Service
 public class JobService {
 
-    private final JobRepository jobRepository;
-    private final RecruiterProfileRepository recruiterProfileRepository;
-    private final JobCategoryRepository jobCategoryRepository;
+        private final JobRepository jobRepository;
+        private final RecruiterProfileRepository recruiterProfileRepository;
+        private final JobCategoryRepository jobCategoryRepository;
 
-    public JobService(
-            JobRepository jobRepository,
-            RecruiterProfileRepository recruiterProfileRepository,
-            JobCategoryRepository jobCategoryRepository) {
+        public JobService(
+                        JobRepository jobRepository,
+                        RecruiterProfileRepository recruiterProfileRepository,
+                        JobCategoryRepository jobCategoryRepository) {
 
-        this.jobRepository = jobRepository;
-        this.recruiterProfileRepository =
-                recruiterProfileRepository;
-        this.jobCategoryRepository =
-                jobCategoryRepository;
-    }
-
-    public JobEntity createJob(
-            JobEntity job,
-            String recruiterEmail) {
-
-        RecruiterProfile recruiter =
-                recruiterProfileRepository
-                        .findByUserEmail(recruiterEmail)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Recruiter profile not found for email: "
-                                                + recruiterEmail
-                                )
-                        );
-
-        if (job.getCategory() != null) {
-
-            Long categoryId =
-                    job.getCategory().getId();
-
-            JobCategory category =
-                    jobCategoryRepository
-                            .findById(categoryId)
-                            .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "Category not found"
-                                    )
-                            );
-
-            job.setCategory(category);
+                this.jobRepository = jobRepository;
+                this.recruiterProfileRepository = recruiterProfileRepository;
+                this.jobCategoryRepository = jobCategoryRepository;
         }
 
-        job.setRecruiter(recruiter);
+        public JobEntity createJob(
+                        JobEntity job,
+                        String recruiterEmail) {
 
-        return jobRepository.save(job);
-    }
+                RecruiterProfile recruiter = recruiterProfileRepository
+                                .findByUserEmail(recruiterEmail)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Recruiter profile not found for email: "
+                                                                + recruiterEmail));
 
-    public List<JobEntity> getAllJobs() {
+                if (job.getCategory() != null) {
 
-        return jobRepository.findAll();
-    }
+                        Long categoryId = job.getCategory().getId();
 
-    public List<JobEntity> getRecruiterJobs(
-            String recruiterEmail) {
+                        JobCategory category = jobCategoryRepository
+                                        .findById(categoryId)
+                                        .orElseThrow(() -> new RuntimeException(
+                                                        "Category not found"));
 
-        return jobRepository
-                .findByRecruiterUserEmail(recruiterEmail);
-    }
+                        job.setCategory(category);
+                }
 
-    public JobEntity updateJob(
-            Long jobId,
-            JobEntity updatedJob,
-            String recruiterEmail) {
+                job.setRecruiter(recruiter);
 
-        JobEntity existingJob =
-                jobRepository
-                        .findById(jobId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Job not found"
-                                )
-                        );
-
-        if (!existingJob
-                .getRecruiter()
-                .getUser()
-                .getEmail()
-                .equals(recruiterEmail)) {
-
-            throw new RuntimeException(
-                    "You are not authorized to update this job"
-            );
+                return jobRepository.save(job);
         }
 
-        existingJob.setTitle(updatedJob.getTitle());
-        existingJob.setCompany(updatedJob.getCompany());
-        existingJob.setLocation(updatedJob.getLocation());
-        existingJob.setDescription(updatedJob.getDescription());
-        existingJob.setResponsibilities(
-                updatedJob.getResponsibilities()
-        );
-        existingJob.setSalary(updatedJob.getSalary());
-        existingJob.setJobType(updatedJob.getJobType());
-        existingJob.setSkills(updatedJob.getSkills());
-        existingJob.setGoodToHave(
-                updatedJob.getGoodToHave()
-        );
-        existingJob.setQualifications(
-                updatedJob.getQualifications()
-        );
-        existingJob.setExperience(
-                updatedJob.getExperience()
-        );
-        existingJob.setContractType(
-                updatedJob.getContractType()
-        );
-        existingJob.setWorkMode(
-                updatedJob.getWorkMode()
-        );
-        existingJob.setVacancies(
-                updatedJob.getVacancies()
-        );
-        existingJob.setApplicationDeadline(
-                updatedJob.getApplicationDeadline()
-        );
-        existingJob.setPostedDate(
-                updatedJob.getPostedDate()
-        );
+        public List<JobEntity> getAllJobs() {
 
-        if (updatedJob.getCategory() != null) {
-
-            Long categoryId =
-                    updatedJob.getCategory().getId();
-
-            JobCategory category =
-                    jobCategoryRepository
-                            .findById(categoryId)
-                            .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "Category not found"
-                                    )
-                            );
-
-            existingJob.setCategory(category);
+                return jobRepository.findAll();
         }
 
-        return jobRepository.save(existingJob);
-    }
+        public JobEntity getJobById(Long jobId) {
+
+                return jobRepository
+                                .findById(jobId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Job not found"));
+        }
+
+        public List<JobEntity> getRecruiterJobs(
+                        String recruiterEmail) {
+
+                return jobRepository
+                                .findByRecruiterUserEmail(recruiterEmail);
+        }
+
+        public JobEntity updateJob(
+                        Long jobId,
+                        JobEntity updatedJob,
+                        String recruiterEmail) {
+
+                JobEntity existingJob = jobRepository
+                                .findById(jobId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Job not found"));
+
+                if (!existingJob
+                                .getRecruiter()
+                                .getUser()
+                                .getEmail()
+                                .equals(recruiterEmail)) {
+
+                        throw new RuntimeException(
+                                        "You are not authorized to update this job");
+                }
+
+                existingJob.setTitle(updatedJob.getTitle());
+                existingJob.setCompany(updatedJob.getCompany());
+                existingJob.setLocation(updatedJob.getLocation());
+                existingJob.setDescription(updatedJob.getDescription());
+                existingJob.setResponsibilities(
+                                updatedJob.getResponsibilities());
+                existingJob.setSalary(updatedJob.getSalary());
+                existingJob.setJobType(updatedJob.getJobType());
+                existingJob.setSkills(updatedJob.getSkills());
+                existingJob.setGoodToHave(
+                                updatedJob.getGoodToHave());
+                existingJob.setQualifications(
+                                updatedJob.getQualifications());
+                existingJob.setExperience(
+                                updatedJob.getExperience());
+                existingJob.setContractType(
+                                updatedJob.getContractType());
+                existingJob.setWorkMode(
+                                updatedJob.getWorkMode());
+                existingJob.setVacancies(
+                                updatedJob.getVacancies());
+                existingJob.setApplicationDeadline(
+                                updatedJob.getApplicationDeadline());
+                existingJob.setPostedDate(
+                                updatedJob.getPostedDate());
+
+                if (updatedJob.getCategory() != null) {
+
+                        Long categoryId = updatedJob.getCategory().getId();
+
+                        JobCategory category = jobCategoryRepository
+                                        .findById(categoryId)
+                                        .orElseThrow(() -> new RuntimeException(
+                                                        "Category not found"));
+
+                        existingJob.setCategory(category);
+                }
+
+                return jobRepository.save(existingJob);
+        }
 }

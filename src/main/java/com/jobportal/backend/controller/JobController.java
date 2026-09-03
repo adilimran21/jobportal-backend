@@ -13,67 +13,65 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class JobController {
 
-    private final JobService jobService;
+        private final JobService jobService;
 
-    public JobController(JobService jobService) {
-        this.jobService = jobService;
-    }
+        public JobController(JobService jobService) {
+                this.jobService = jobService;
+        }
 
-    @PostMapping("/recruiter/jobs")
-    public ResponseEntity<JobEntity> createJob(
-            @RequestBody JobEntity job,
-            Authentication authentication) {
+        @PostMapping("/recruiter/jobs")
+        public ResponseEntity<JobEntity> createJob(
+                        @RequestBody JobEntity job,
+                        Authentication authentication) {
 
-        String recruiterEmail =
-                authentication.getName();
+                String recruiterEmail = authentication.getName();
 
-        JobEntity savedJob =
-                jobService.createJob(
-                        job,
-                        recruiterEmail
-                );
+                JobEntity savedJob = jobService.createJob(
+                                job,
+                                recruiterEmail);
 
-        return ResponseEntity.ok(savedJob);
-    }
+                return ResponseEntity.ok(savedJob);
+        }
 
-    @GetMapping("/jobseeker/jobs")
-    public ResponseEntity<List<JobEntity>> getAllJobs() {
+        @GetMapping("/jobseeker/jobs")
+        public ResponseEntity<List<JobEntity>> getAllJobs() {
 
-        return ResponseEntity.ok(
-                jobService.getAllJobs()
-        );
-    }
+                return ResponseEntity.ok(
+                                jobService.getAllJobs());
+        }
 
-    @GetMapping("/recruiter/jobs")
-    public ResponseEntity<List<JobEntity>> getRecruiterJobs(
-            Authentication authentication) {
+        @GetMapping("/jobseeker/jobs/{id}")
+        public ResponseEntity<JobEntity> getJobById(
+                        @PathVariable Long id) {
 
-        String recruiterEmail =
-                authentication.getName();
+                return ResponseEntity.ok(
+                                jobService.getJobById(id));
+        }
 
-        return ResponseEntity.ok(
-                jobService.getRecruiterJobs(
-                        recruiterEmail
-                )
-        );
-    }
+        @GetMapping("/recruiter/jobs")
+        public ResponseEntity<List<JobEntity>> getRecruiterJobs(
+                        Authentication authentication) {
 
-    @PutMapping("/recruiter/jobs/{id}")
-    public ResponseEntity<JobEntity> updateJob(
-            @PathVariable Long id,
-            @RequestBody JobEntity job,
-            Authentication authentication) {
+                String recruiterEmail = authentication.getName();
 
-        String recruiterEmail =
-                authentication.getName();
+                return ResponseEntity.ok(
+                                jobService.getRecruiterJobs(
+                                                recruiterEmail));
+        }
 
-        JobEntity updatedJob =
-                jobService.updateJob(
-                        id,
-                        job,
-                        recruiterEmail
-                );
+        @PutMapping("/recruiter/jobs/{id}")
+        public ResponseEntity<JobEntity> updateJob(
+                        @PathVariable Long id,
+                        @RequestBody JobEntity job,
+                        Authentication authentication) {
 
-        return ResponseEntity.ok(updatedJob);
-    }
+                String recruiterEmail = authentication.getName();
+
+                JobEntity updatedJob = jobService.updateJob(
+                                id,
+                                job,
+                                recruiterEmail);
+
+                return ResponseEntity.ok(updatedJob);
+        }
 }
