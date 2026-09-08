@@ -14,15 +14,24 @@ public interface JobRepository
 
     List<JobEntity> findByRecruiterId(Long recruiterId);
 
+    List<JobEntity> findByRecruiterIdAndStatus(
+            Long recruiterId,
+            String status);
+
     long countByRecruiterUserEmail(String email);
+
+    long countByStatus(String status);
+
+    List<JobEntity> findByStatus(String status);
 
     @Query("""
             SELECT j FROM JobEntity j
             WHERE
-            (:keyword IS NULL OR
-             LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-             LOWER(j.company) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-             LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            j.status = 'ACTIVE'
+            AND (:keyword IS NULL OR
+                 LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                 LOWER(j.company) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                 LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
             AND (:location IS NULL OR
                  LOWER(j.location) LIKE LOWER(CONCAT('%', :location, '%')))
             AND (:jobType IS NULL OR

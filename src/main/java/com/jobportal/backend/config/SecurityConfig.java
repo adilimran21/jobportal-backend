@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -20,6 +21,13 @@ public class SecurityConfig {
                         JwtAuthenticationFilter jwtAuthenticationFilter) {
 
                 this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
+
+        @Bean
+        public UserDetailsService userDetailsService() {
+                return username -> {
+                        throw new UsernameNotFoundException("User not found");
+                };
         }
 
         @Bean
@@ -38,6 +46,9 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/users/register",
                                                                 "/api/users/login",
+                                                                "/api/users/forgot-password",
+                                                                "/api/users/verify-otp",
+                                                                "/api/users/reset-password",
                                                                 "/api/jobseeker/jobs/**",
                                                                 "/api/jobs/search",
                                                                 "/api/companies",
@@ -68,6 +79,11 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/users/profile")
                                                 .authenticated()
+
+                                                // Admin APIs - ADMIN only
+                                                .requestMatchers(
+                                                                "/api/admin/**")
+                                                .hasRole("ADMIN")
 
                                                 // Candidate APIs - JOB_SEEKER only
                                                 .requestMatchers(

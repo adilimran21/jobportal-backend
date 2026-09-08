@@ -1,6 +1,6 @@
 package com.jobportal.backend.controller;
 
-import com.jobportal.backend.entity.SavedJob;
+import com.jobportal.backend.dto.SavedJobResponseDTO;
 import com.jobportal.backend.service.SavedJobService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,34 +22,29 @@ public class SavedJobController {
     }
 
     @PostMapping("/{jobId}")
-    public ResponseEntity<SavedJob> saveJob(
+    public ResponseEntity<SavedJobResponseDTO> saveJob(
             @PathVariable Long jobId,
             Authentication authentication) {
 
-        String candidateEmail =
-                authentication.getName();
+        String candidateEmail = authentication.getName();
 
-        SavedJob savedJob =
+        SavedJobResponseDTO savedJob =
                 savedJobService.saveJob(
                         jobId,
-                        candidateEmail
-                );
+                        candidateEmail);
 
         return ResponseEntity.ok(savedJob);
     }
 
     @GetMapping
-    public ResponseEntity<List<SavedJob>> getSavedJobs(
+    public ResponseEntity<List<SavedJobResponseDTO>> getSavedJobs(
             Authentication authentication) {
 
-        String candidateEmail =
-                authentication.getName();
+        String candidateEmail = authentication.getName();
 
         return ResponseEntity.ok(
                 savedJobService.getSavedJobs(
-                        candidateEmail
-                )
-        );
+                        candidateEmail));
     }
 
     @DeleteMapping("/{jobId}")
@@ -57,16 +52,13 @@ public class SavedJobController {
             @PathVariable Long jobId,
             Authentication authentication) {
 
-        String candidateEmail =
-                authentication.getName();
+        String candidateEmail = authentication.getName();
 
         savedJobService.deleteSavedJob(
                 jobId,
-                candidateEmail
-        );
+                candidateEmail);
 
         return ResponseEntity.ok(
-                "Job removed from saved jobs"
-        );
+                "Job removed from saved jobs");
     }
 }

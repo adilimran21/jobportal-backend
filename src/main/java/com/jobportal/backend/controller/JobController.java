@@ -19,6 +19,8 @@ public class JobController {
                 this.jobService = jobService;
         }
 
+        // RECRUITER JOB APIs
+
         @PostMapping("/recruiter/jobs")
         public ResponseEntity<JobEntity> createJob(
                         @RequestBody JobEntity job,
@@ -31,21 +33,6 @@ public class JobController {
                                 recruiterEmail);
 
                 return ResponseEntity.ok(savedJob);
-        }
-
-        @GetMapping("/jobseeker/jobs")
-        public ResponseEntity<List<JobEntity>> getAllJobs() {
-
-                return ResponseEntity.ok(
-                                jobService.getAllJobs());
-        }
-
-        @GetMapping("/jobseeker/jobs/{id}")
-        public ResponseEntity<JobEntity> getJobById(
-                        @PathVariable Long id) {
-
-                return ResponseEntity.ok(
-                                jobService.getJobById(id));
         }
 
         @GetMapping("/recruiter/jobs")
@@ -73,5 +60,37 @@ public class JobController {
                                 recruiterEmail);
 
                 return ResponseEntity.ok(updatedJob);
+        }
+
+        @DeleteMapping("/recruiter/jobs/{id}")
+        public ResponseEntity<String> deleteJob(
+                        @PathVariable Long id,
+                        Authentication authentication) {
+
+                String recruiterEmail = authentication.getName();
+
+                jobService.deleteJob(
+                                id,
+                                recruiterEmail);
+
+                return ResponseEntity.ok(
+                                "Job deleted successfully");
+        }
+
+        // JOB SEEKER JOB APIs
+
+        @GetMapping("/jobseeker/jobs")
+        public ResponseEntity<List<JobEntity>> getAllJobs() {
+
+                return ResponseEntity.ok(
+                                jobService.getAllJobs());
+        }
+
+        @GetMapping("/jobseeker/jobs/{id}")
+        public ResponseEntity<JobEntity> getJobById(
+                        @PathVariable Long id) {
+
+                return ResponseEntity.ok(
+                                jobService.getJobById(id));
         }
 }

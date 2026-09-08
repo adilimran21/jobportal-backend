@@ -20,7 +20,6 @@ public class CompanyService {
             JobRepository jobRepository) {
 
         this.recruiterProfileRepository = recruiterProfileRepository;
-
         this.jobRepository = jobRepository;
     }
 
@@ -53,7 +52,9 @@ public class CompanyService {
                         "Company not found"));
 
         return jobRepository
-                .findByRecruiterId(companyId);
+                .findByRecruiterIdAndStatus(
+                        companyId,
+                        "ACTIVE");
     }
 
     private CompanyResponseDTO convertToDTO(

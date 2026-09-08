@@ -48,9 +48,6 @@ public class JwtAuthenticationFilter
 
                         String role = jwtService.extractRole(token);
 
-                        System.out.println("JWT EMAIL: " + email);
-                        System.out.println("JWT ROLE: " + role);
-
                         if (email != null &&
                                         role != null &&
                                         SecurityContextHolder
@@ -63,9 +60,6 @@ public class JwtAuthenticationFilter
                                         authorityRole = "ROLE_" + authorityRole;
                                 }
 
-                                System.out.println(
-                                                "SPRING AUTHORITY: " + authorityRole);
-
                                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority(
                                                 authorityRole);
 
@@ -77,15 +71,10 @@ public class JwtAuthenticationFilter
                                 SecurityContextHolder
                                                 .getContext()
                                                 .setAuthentication(authentication);
-
-                                System.out.println(
-                                                "AUTHENTICATION SET SUCCESSFULLY");
                         }
 
                 } catch (Exception e) {
-
-                        System.out.println(
-                                        "JWT Error: " + e.getMessage());
+                        // Invalid JWT is ignored and request continues
                 }
 
                 filterChain.doFilter(request, response);

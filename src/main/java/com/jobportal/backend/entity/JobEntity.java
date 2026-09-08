@@ -61,6 +61,9 @@ public class JobEntity {
 
     private LocalDate postedDate;
 
+    @Column(nullable = false)
+    private String status = "ACTIVE";
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private JobCategory category;

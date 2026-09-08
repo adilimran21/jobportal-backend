@@ -31,7 +31,7 @@ public class JobRecommendationService {
                 .orElseThrow(() -> new RuntimeException(
                         "Candidate profile not found"));
 
-        List<JobEntity> jobs = jobRepository.findAll();
+        List<JobEntity> jobs = jobRepository.findByStatus("ACTIVE");
 
         List<JobRecommendationResponseDTO> recommendations = new ArrayList<>();
 

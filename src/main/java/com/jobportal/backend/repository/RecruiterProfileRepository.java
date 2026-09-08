@@ -9,4 +9,6 @@ public interface RecruiterProfileRepository
         extends JpaRepository<RecruiterProfile, Long> {
 
     Optional<RecruiterProfile> findByUserEmail(String email);
+
+    long countByModerationStatus(String moderationStatus);
 }

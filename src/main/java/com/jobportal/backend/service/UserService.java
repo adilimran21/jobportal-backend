@@ -1,101 +1,232 @@
 package com.jobportal.backend.service;
 
+import com.jobportal.backend.entity.PasswordResetOTP;
 import com.jobportal.backend.entity.UserEntity;
+import com.jobportal.backend.repository.PasswordResetOTPRepository;
 import com.jobportal.backend.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Random;
+
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final JwtService jwtService;
+        private final UserRepository userRepository;
+        private final JwtService jwtService;
+        private final AdminNotificationService adminNotificationService;
+        private final PasswordResetOTPRepository passwordResetOTPRepository;
+        private final EmailService emailService;
 
-    private final BCryptPasswordEncoder passwordEncoder =
-            new BCryptPasswordEncoder();
+        private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UserService(
-            UserRepository userRepository,
-            JwtService jwtService) {
+        public UserService(
+                        UserRepository userRepository,
+                        JwtService jwtService,
+                        AdminNotificationService adminNotificationService,
+                        PasswordResetOTPRepository passwordResetOTPRepository,
+                        EmailService emailService) {
 
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
-    }
-
-    
-    // REGISTER
-    
-    public UserEntity createUser(UserEntity user) {
-
-        // Check email
-        if (user.getEmail() == null ||
-                user.getEmail().isBlank()) {
-
-            throw new RuntimeException("Email is required");
+                this.userRepository = userRepository;
+                this.jwtService = jwtService;
+                this.adminNotificationService = adminNotificationService;
+                this.passwordResetOTPRepository = passwordResetOTPRepository;
+                this.emailService = emailService;
         }
 
-        // Check if email already exists
-        if (userRepository.existsByEmail(user.getEmail())) {
+        public UserEntity createUser(UserEntity user) {
 
-            throw new RuntimeException(
-                    "Email already registered"
-            );
+                if (user.getEmail() == null ||
+                                user.getEmail().isBlank()) {
+
+                        throw new RuntimeException("Email is required");
+                }
+
+                if (userRepository.existsByEmail(user.getEmail())) {
+
+                        throw new RuntimeException(
+                                        "Email already registered");
+                }
+
+                if (user.getPassword() == null ||
+                                user.getPassword().isBlank()) {
+
+                        throw new RuntimeException(
+                                        "Password is required");
+                }
+
+                if (user.getRole() == null ||
+                                user.getRole().isBlank()) {
+
+                        throw new RuntimeException("Role is required");
+                }
+
+                if (user.getRole().equalsIgnoreCase("ADMIN")) {
+
+                        throw new RuntimeException(
+                                        "Admin registration is not allowed");
+                }
+
+                String encodedPassword = passwordEncoder.encode(user.getPassword());
+
+                user.setPassword(encodedPassword);
+
+                user.setStatus("ACTIVE");
+
+                UserEntity savedUser = userRepository.save(user);
+
+                if (user.getRole().equalsIgnoreCase("RECRUITER")) {
+
+                        adminNotificationService.createNotification(
+                                        "New recruiter registered: "
+                                                        + user.getName()
+                                                        + " (" + user.getEmail() + ")",
+                                        "NEW_RECRUITER");
+                }
+
+                return savedUser;
         }
 
-        // Check password
-        if (user.getPassword() == null ||
-                user.getPassword().isBlank()) {
+        public String loginUser(
+                        String email,
+                        String password) {
 
-            throw new RuntimeException(
-                    "Password is required"
-            );
+                if (email == null || email.isBlank()) {
+                        return null;
+                }
+
+                if (password == null || password.isBlank()) {
+                        return null;
+                }
+
+                return userRepository.findByEmail(email)
+                                .filter(user -> user.getStatus() != null &&
+                                                user.getStatus()
+                                                                .equalsIgnoreCase("ACTIVE"))
+                                .filter(user -> passwordEncoder.matches(
+                                                password,
+                                                user.getPassword()))
+                                .map(user -> jwtService.generateToken(
+                                                user.getEmail(),
+                                                user.getRole()))
+                                .orElse(null);
         }
 
-        // Encrypt password
-        String encodedPassword =
-                passwordEncoder.encode(user.getPassword());
+        public UserEntity getUserByEmail(String email) {
 
-        user.setPassword(encodedPassword);
-
-        // Save user
-        return userRepository.save(user);
-    }
-
-    
-    // LOGIN
-    
-    public String loginUser(String email, String password) {
-
-        if (email == null || email.isBlank()) {
-            return null;
+                return userRepository.findByEmail(email)
+                                .orElse(null);
         }
 
-        if (password == null || password.isBlank()) {
-            return null;
+        public boolean sendPasswordResetOTP(String email) {
+
+                if (email == null || email.isBlank()) {
+                        return false;
+                }
+
+                UserEntity user = userRepository.findByEmail(email)
+                                .orElse(null);
+
+                if (user == null) {
+                        return false;
+                }
+
+                String otp = String.format(
+                                "%06d",
+                                new Random().nextInt(1000000));
+
+                PasswordResetOTP passwordResetOTP = passwordResetOTPRepository
+                                .findTopByEmailOrderByIdDesc(email)
+                                .orElse(new PasswordResetOTP());
+
+                passwordResetOTP.setEmail(email);
+                passwordResetOTP.setOtp(otp);
+                passwordResetOTP.setExpiresAt(
+                                LocalDateTime.now().plusMinutes(5));
+                passwordResetOTP.setVerified(false);
+
+                passwordResetOTPRepository.save(passwordResetOTP);
+
+                emailService.sendPasswordResetOTP(
+                                email,
+                                otp);
+
+                return true;
         }
 
-        return userRepository.findByEmail(email)
-                .filter(user ->
-                        passwordEncoder.matches(
-                                password,
-                                user.getPassword()
-                        )
-                )
-                .map(user ->
-                        jwtService.generateToken(
-                                user.getEmail(),
-                                user.getRole()
-                        )
-                )
-                .orElse(null);
-    }
+        public boolean verifyPasswordResetOTP(
+                        String email,
+                        String otp) {
 
-    
-    // GET USER BY EMAIL
-    
-    public UserEntity getUserByEmail(String email) {
+                PasswordResetOTP passwordResetOTP = passwordResetOTPRepository
+                                .findTopByEmailOrderByIdDesc(email)
+                                .orElse(null);
 
-        return userRepository.findByEmail(email)
-                .orElse(null);
-    }
+                if (passwordResetOTP == null) {
+                        return false;
+                }
+
+                if (passwordResetOTP.isVerified()) {
+                        return false;
+                }
+
+                if (passwordResetOTP.getExpiresAt()
+                                .isBefore(LocalDateTime.now())) {
+                        return false;
+                }
+
+                if (!passwordResetOTP.getOtp().equals(otp)) {
+                        return false;
+                }
+
+                passwordResetOTP.setVerified(true);
+
+                passwordResetOTPRepository.save(passwordResetOTP);
+
+                return true;
+        }
+
+        public boolean resetPassword(
+                        String email,
+                        String newPassword) {
+
+                if (email == null ||
+                                email.isBlank() ||
+                                newPassword == null ||
+                                newPassword.isBlank()) {
+
+                        return false;
+                }
+
+                PasswordResetOTP passwordResetOTP = passwordResetOTPRepository
+                                .findTopByEmailOrderByIdDesc(email)
+                                .orElse(null);
+
+                if (passwordResetOTP == null ||
+                                !passwordResetOTP.isVerified()) {
+                        return false;
+                }
+
+                if (passwordResetOTP.getExpiresAt()
+                                .isBefore(LocalDateTime.now())) {
+                        return false;
+                }
+
+                UserEntity user = userRepository.findByEmail(email)
+                                .orElse(null);
+
+                if (user == null) {
+                        return false;
+                }
+
+                user.setPassword(
+                                passwordEncoder.encode(newPassword));
+
+                userRepository.save(user);
+
+                passwordResetOTPRepository.delete(passwordResetOTP);
+
+                return true;
+        }
 }

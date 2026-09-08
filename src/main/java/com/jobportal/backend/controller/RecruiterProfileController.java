@@ -13,88 +13,74 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*")
 public class RecruiterProfileController {
 
-    private final RecruiterProfileRepository recruiterProfileRepository;
-    private final UserRepository userRepository;
+        private final RecruiterProfileRepository recruiterProfileRepository;
+        private final UserRepository userRepository;
 
-    public RecruiterProfileController(
-            RecruiterProfileRepository recruiterProfileRepository,
-            UserRepository userRepository) {
+        public RecruiterProfileController(
+                        RecruiterProfileRepository recruiterProfileRepository,
+                        UserRepository userRepository) {
 
-        this.recruiterProfileRepository = recruiterProfileRepository;
-        this.userRepository = userRepository;
-    }
-
-    // CREATE / UPDATE RECRUITER PROFILE
-    @PostMapping
-    public ResponseEntity<RecruiterProfile> createOrUpdateProfile(
-            @RequestBody RecruiterProfile profile,
-            Authentication authentication) {
-
-        String email = authentication.getName();
-
-        // Find logged-in user
-        UserEntity user = userRepository
-                .findByEmail(email)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found with email: " + email
-                        )
-                );
-
-        // Find existing recruiter profile using user email
-        RecruiterProfile existingProfile =
-                recruiterProfileRepository
-                        .findByUserEmail(email)
-                        .orElse(null);
-
-        // UPDATE existing profile
-        if (existingProfile != null) {
-
-            existingProfile.setCompanyName(
-                    profile.getCompanyName()
-            );
-
-            existingProfile.setCompanyLocation(
-                    profile.getCompanyLocation()
-            );
-
-            existingProfile.setCompanyDescription(
-                    profile.getCompanyDescription()
-            );
-
-            existingProfile.setWebsite(
-                    profile.getWebsite()
-            );
-
-            return ResponseEntity.ok(
-                    recruiterProfileRepository.save(existingProfile)
-            );
+                this.recruiterProfileRepository = recruiterProfileRepository;
+                this.userRepository = userRepository;
         }
 
-        // CREATE new profile
-        profile.setUser(user);
+        // CREATE / UPDATE RECRUITER PROFILE
+        @PostMapping
+        public ResponseEntity<RecruiterProfile> createOrUpdateProfile(
+                        @RequestBody RecruiterProfile profile,
+                        Authentication authentication) {
 
-        return ResponseEntity.ok(
-                recruiterProfileRepository.save(profile)
-        );
-    }
+                String email = authentication.getName();
 
-    // GET RECRUITER PROFILE
-    @GetMapping
-    public ResponseEntity<RecruiterProfile> getProfile(
-            Authentication authentication) {
+                // Find logged-in user
+                UserEntity user = userRepository
+                                .findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "User not found with email: " + email));
 
-        String email = authentication.getName();
+                // Find existing recruiter profile using user email
+                RecruiterProfile existingProfile = recruiterProfileRepository
+                                .findByUserEmail(email)
+                                .orElse(null);
 
-        RecruiterProfile profile =
-                recruiterProfileRepository
-                        .findByUserEmail(email)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Recruiter profile not found"
-                                )
-                        );
+                // UPDATE existing profile
+                if (existingProfile != null) {
 
-        return ResponseEntity.ok(profile);
-    }
+                        existingProfile.setCompanyName(
+                                        profile.getCompanyName());
+
+                        existingProfile.setCompanyLocation(
+                                        profile.getCompanyLocation());
+
+                        existingProfile.setCompanyDescription(
+                                        profile.getCompanyDescription());
+
+                        existingProfile.setWebsite(
+                                        profile.getWebsite());
+
+                        return ResponseEntity.ok(
+                                        recruiterProfileRepository.save(existingProfile));
+                }
+
+                // CREATE new profile
+                profile.setUser(user);
+
+                return ResponseEntity.ok(
+                                recruiterProfileRepository.save(profile));
+        }
+
+        // GET RECRUITER PROFILE
+        @GetMapping
+        public ResponseEntity<RecruiterProfile> getProfile(
+                        Authentication authentication) {
+
+                String email = authentication.getName();
+
+                RecruiterProfile profile = recruiterProfileRepository
+                                .findByUserEmail(email)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Recruiter profile not found"));
+
+                return ResponseEntity.ok(profile);
+        }
 }

@@ -90,7 +90,14 @@ public class ApplicationService {
                                 job.getTitle(),
                                 job.getCompany());
 
-                return convertToResponseDTO(savedApplication);
+                Application completeApplication = applicationRepository
+                                .findByIdAndCandidateUserEmail(
+                                                savedApplication.getId(),
+                                                email)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Application not found"));
+
+                return convertToResponseDTO(completeApplication);
         }
 
         public List<ApplicationResponseDTO> getCandidateApplications(
@@ -245,7 +252,14 @@ public class ApplicationService {
                         }
                 }
 
-                return convertToResponseDTO(updatedApplication);
+                Application completeApplication = applicationRepository
+                                .findByIdAndJobRecruiterUserEmail(
+                                                updatedApplication.getId(),
+                                                recruiterEmail)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Application not found"));
+
+                return convertToResponseDTO(completeApplication);
         }
 
         private ApplicationResponseDTO convertToResponseDTO(

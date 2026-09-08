@@ -16,7 +16,6 @@ public class RecruiterProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Recruiter belongs to one User
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
@@ -29,4 +28,7 @@ public class RecruiterProfile {
     private String companyDescription;
 
     private String website;
+
+    @Column(nullable = false)
+    private String moderationStatus = "PENDING";
 }

@@ -56,7 +56,7 @@ public class JobService {
 
         public List<JobEntity> getAllJobs() {
 
-                return jobRepository.findAll();
+                return jobRepository.findByStatus("ACTIVE");
         }
 
         public JobEntity getJobById(Long jobId) {
@@ -133,5 +133,29 @@ public class JobService {
                 }
 
                 return jobRepository.save(existingJob);
+        }
+
+        public void deleteJob(
+                        Long jobId,
+                        String recruiterEmail) {
+
+                JobEntity existingJob = jobRepository
+                                .findById(jobId)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "Job not found"));
+
+                if (!existingJob
+                                .getRecruiter()
+                                .getUser()
+                                .getEmail()
+                                .equals(recruiterEmail)) {
+
+                        throw new RuntimeException(
+                                        "You are not authorized to delete this job");
+                }
+
+                existingJob.setStatus("REMOVED");
+
+                jobRepository.save(existingJob);
         }
 }

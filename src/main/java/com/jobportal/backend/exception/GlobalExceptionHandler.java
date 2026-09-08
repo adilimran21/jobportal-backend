@@ -10,27 +10,47 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DuplicateApplicationException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateApplication(
-            DuplicateApplicationException exception) {
+        @ExceptionHandler(CandidateProfileNotFoundException.class)
+        public ResponseEntity<Map<String, String>> handleCandidateProfileNotFound(
+                        CandidateProfileNotFoundException exception) {
 
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(Map.of(
-                        "message",
-                        exception.getMessage()
-                ));
-    }
+                return ResponseEntity
+                                .status(HttpStatus.NOT_FOUND)
+                                .body(Map.of(
+                                                "message",
+                                                exception.getMessage()));
+        }
 
-    @ExceptionHandler(DuplicateSavedJobException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateSavedJob(
-            DuplicateSavedJobException exception) {
+        @ExceptionHandler(DuplicateApplicationException.class)
+        public ResponseEntity<Map<String, String>> handleDuplicateApplication(
+                        DuplicateApplicationException exception) {
 
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(Map.of(
-                        "message",
-                        exception.getMessage()
-                ));
-    }
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(Map.of(
+                                                "message",
+                                                exception.getMessage()));
+        }
+
+        @ExceptionHandler(DuplicateSavedJobException.class)
+        public ResponseEntity<Map<String, String>> handleDuplicateSavedJob(
+                        DuplicateSavedJobException exception) {
+
+                return ResponseEntity
+                                .status(HttpStatus.CONFLICT)
+                                .body(Map.of(
+                                                "message",
+                                                exception.getMessage()));
+        }
+
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<Map<String, String>> handleIllegalArgument(
+                        IllegalArgumentException exception) {
+
+                return ResponseEntity
+                                .status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                                "message",
+                                                exception.getMessage()));
+        }
 }
