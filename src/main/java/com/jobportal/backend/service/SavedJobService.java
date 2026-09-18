@@ -120,9 +120,20 @@ public class SavedJobService {
                         candidate.getUser().getEmail(),
                         candidate.getPhone(),
                         candidate.getLocation(),
-                        candidate.getSkills(),
+                        candidate.getProfileImage(),
+                        candidate.getJobTitle(),
+                        candidate.getHeadline(),
+                        candidate.getCareerStatus(),
                         candidate.getExperience(),
-                        candidate.getEducation(),
+                        candidate.getCurrentCompany(),
+                        candidate.getCurrentSalary(),
+                        candidate.getSkills(),
+                        candidate.getTenthMarks(),
+                        candidate.getTwelfthMarks(),
+                        candidate.getGraduation(),
+                        candidate.getAbout(),
+                        candidate.getLinkedin(),
+                        candidate.getPortfolio(),
                         candidate.getResume()
                 );
 

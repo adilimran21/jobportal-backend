@@ -64,7 +64,7 @@ public class JobEntity {
     @Column(nullable = false)
     private String status = "ACTIVE";
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "category_id")
     private JobCategory category;
 

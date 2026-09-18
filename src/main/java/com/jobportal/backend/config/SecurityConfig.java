@@ -21,135 +21,152 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        public SecurityConfig(
-                        JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        }
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
-        @Bean
-        public UserDetailsService userDetailsService() {
-                return username -> {
-                        throw new UsernameNotFoundException("User not found");
-                };
-        }
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            throw new UsernameNotFoundException("User not found");
+        };
+    }
 
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
 
-                CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
-                configuration.setAllowedOrigins(
-                                List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:5173"));
 
-                configuration.setAllowedMethods(
-                                List.of(
-                                                "GET",
-                                                "POST",
-                                                "PUT",
-                                                "PATCH",
-                                                "DELETE",
-                                                "OPTIONS"));
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"));
 
-                configuration.setAllowedHeaders(
-                                List.of(
-                                                "Authorization",
-                                                "Content-Type"));
+        configuration.setAllowedHeaders(
+                List.of(
+                        "Authorization",
+                        "Content-Type"));
 
-                configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(false);
 
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
 
-                source.registerCorsConfiguration(
-                                "/**",
-                                configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration);
 
-                return source;
-        }
+        return source;
+    }
 
-        @Bean
-        public SecurityFilterChain securityFilterChain(
-                        HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
-                http
-                                .cors(Customizer.withDefaults())
+        http
+                .cors(Customizer.withDefaults())
 
-                                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable())
 
-                                .sessionManagement(session -> session.sessionCreationPolicy(
-                                                SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
 
-                                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth
 
-                                                // CORS preflight
-                                                .requestMatchers(
-                                                                HttpMethod.OPTIONS,
-                                                                "/**")
-                                                .permitAll()
+                        
+                        // CORS PREFLIGHT
+                        
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**")
+                        .permitAll()
 
-                                                // Public APIs
-                                                .requestMatchers(
-                                                                "/api/users/register",
-                                                                "/api/users/login",
-                                                                "/api/users/forgot-password",
-                                                                "/api/users/verify-otp",
-                                                                "/api/users/reset-password",
-                                                                "/api/jobseeker/jobs/**",
-                                                                "/api/jobs/search",
-                                                                "/api/companies",
-                                                                "/api/companies/**")
-                                                .permitAll()
+                        
+                        // PUBLIC APIs
+                        
+                        .requestMatchers(
+                                "/api/users/register",
+                                "/api/users/login",
+                                "/api/users/forgot-password",
+                                "/api/users/verify-otp",
+                                "/api/users/reset-password",
+                                "/api/jobseeker/jobs/**",
+                                "/api/jobs/search",
+                                "/api/companies",
+                                "/api/companies/**")
+                        .permitAll()
 
-                                                // Categories - public GET
-                                                .requestMatchers(
-                                                                HttpMethod.GET,
-                                                                "/api/categories",
-                                                                "/api/categories/**")
-                                                .permitAll()
+                        
+                        // CATEGORIES
+                        
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/categories",
+                                "/api/categories/**")
+                        .permitAll()
 
-                                                // Categories - RECRUITER only
-                                                .requestMatchers(
-                                                                HttpMethod.POST,
-                                                                "/api/categories",
-                                                                "/api/categories/**")
-                                                .hasRole("RECRUITER")
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/categories",
+                                "/api/categories/**")
+                        .hasAuthority("ROLE_RECRUITER")
 
-                                                .requestMatchers(
-                                                                HttpMethod.DELETE,
-                                                                "/api/categories",
-                                                                "/api/categories/**")
-                                                .hasRole("RECRUITER")
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/categories",
+                                "/api/categories/**")
+                        .hasAuthority("ROLE_RECRUITER")
 
-                                                // User profile - authenticated
-                                                .requestMatchers(
-                                                                "/api/users/profile")
-                                                .authenticated()
+                        
+                        // USER PROFILE
+                        
+                        .requestMatchers(
+                                "/api/users/profile")
+                        .authenticated()
 
-                                                // Admin APIs
-                                                .requestMatchers(
-                                                                "/api/admin/**")
-                                                .hasRole("ADMIN")
+                        
+                        // ADMIN APIs
+                        
+                        .requestMatchers(
+                                "/api/admin/**")
+                        .hasAuthority("ROLE_ADMIN")
 
-                                                // Candidate APIs
-                                                .requestMatchers(
-                                                                "/api/candidate/**")
-                                                .hasRole("JOB_SEEKER")
+                        
+                        // CANDIDATE APIs
+                        
+                        .requestMatchers(
+                                "/api/candidate/**")
+                        .hasAuthority("ROLE_JOB_SEEKER")
 
-                                                // Recruiter APIs
-                                                .requestMatchers(
-                                                                "/api/recruiter/**")
-                                                .hasRole("RECRUITER")
+                        
+                        // RECRUITER APIs
+                        
+                        .requestMatchers(
+                                "/api/recruiter/**")
+                        .hasAuthority("ROLE_RECRUITER")
 
-                                                // Everything else
-                                                .anyRequest()
-                                                .authenticated())
+                        
+                        // EVERYTHING ELSE
+                        
+                        .anyRequest()
+                        .authenticated())
 
-                                .addFilterBefore(
-                                                jwtAuthenticationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
 
-                return http.build();
-        }
+        return http.build();
+    }
 }

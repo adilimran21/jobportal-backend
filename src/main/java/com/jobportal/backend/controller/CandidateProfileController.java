@@ -33,8 +33,8 @@ public class CandidateProfileController {
 
         return ResponseEntity.ok(profile);
     }
-    
- // CREATE / UPDATE PROFILE
+
+    // CREATE / UPDATE CANDIDATE PROFILE
 
     @PutMapping("/profile")
     public ResponseEntity<CandidateProfileResponseDTO> saveProfile(

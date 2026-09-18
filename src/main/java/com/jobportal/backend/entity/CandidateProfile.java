@@ -16,7 +16,6 @@ public class CandidateProfile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Candidate belongs to one User
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private UserEntity user;
@@ -25,13 +24,36 @@ public class CandidateProfile {
 
     private String location;
 
-    @Column(length = 1000)
-    private String skills;
+    @Lob
+    private String profileImage;
+
+    private String jobTitle;
+
+    private String headline;
+
+    private String careerStatus;
 
     private String experience;
 
-    @Column(length = 2000)
-    private String education;
+    private String currentCompany;
+
+    private String currentSalary;
+
+    @Column(length = 1000)
+    private String skills;
+
+    private String tenthMarks;
+
+    private String twelfthMarks;
+
+    private String graduation;
+
+    @Column(length = 3000)
+    private String about;
+
+    private String linkedin;
+
+    private String portfolio;
 
     private String resume;
 }

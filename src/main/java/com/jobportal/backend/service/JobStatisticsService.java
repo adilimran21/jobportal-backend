@@ -23,15 +23,35 @@ public class JobStatisticsService {
     public JobStatisticsResponseDTO getStatistics(
             String recruiterEmail) {
 
+        // JOB STATISTICS
+
+        // Total jobs ever posted by this recruiter
         long totalJobs =
                 jobRepository.countByRecruiterUserEmail(
                         recruiterEmail
                 );
 
-        long totalApplications =
-                applicationRepository.countByJobRecruiterUserEmail(
-                        recruiterEmail
+        // Currently active jobs
+        long activeJobs =
+                jobRepository.countByRecruiterUserEmailAndStatus(
+                        recruiterEmail,
+                        "ACTIVE"
                 );
+
+        // Removed jobs
+        long removedJobs =
+                jobRepository.countByRecruiterUserEmailAndStatus(
+                        recruiterEmail,
+                        "REMOVED"
+                );
+
+        // APPLICATION STATISTICS
+
+        long totalApplications =
+                applicationRepository
+                        .countByJobRecruiterUserEmail(
+                                recruiterEmail
+                        );
 
         long pendingApplications =
                 applicationRepository
@@ -61,8 +81,12 @@ public class JobStatisticsService {
                                 ApplicationStatus.HIRED
                         );
 
+        // RESPONSE
+
         return new JobStatisticsResponseDTO(
                 totalJobs,
+                activeJobs,
+                removedJobs,
                 totalApplications,
                 pendingApplications,
                 shortlistedApplications,
