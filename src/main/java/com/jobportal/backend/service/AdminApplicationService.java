@@ -5,6 +5,7 @@ import com.jobportal.backend.entity.Application;
 import com.jobportal.backend.entity.ApplicationStatus;
 import com.jobportal.backend.repository.ApplicationRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +22,7 @@ public class AdminApplicationService {
         this.applicationRepository = applicationRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<ApplicationResponseDTO> getAllApplications() {
 
         return applicationRepository

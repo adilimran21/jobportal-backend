@@ -7,8 +7,6 @@ import com.jobportal.backend.repository.ApplicationRepository;
 import com.jobportal.backend.repository.JobRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;

@@ -4,6 +4,7 @@ import com.jobportal.backend.entity.UserEntity;
 import com.jobportal.backend.service.JwtService;
 import com.jobportal.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -13,179 +14,259 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class UserController {
 
-        private final UserService userService;
-        private final JwtService jwtService;
+    private final UserService userService;
+    private final JwtService jwtService;
 
-        public UserController(
-                        UserService userService,
-                        JwtService jwtService) {
+    public UserController(
+            UserService userService,
+            JwtService jwtService) {
 
-                this.userService = userService;
-                this.jwtService = jwtService;
+        this.userService = userService;
+        this.jwtService = jwtService;
+    }
+
+    // =========================================================
+    // REGISTER
+    // =========================================================
+
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(
+            @RequestBody UserEntity user) {
+
+        try {
+
+            UserEntity savedUser =
+                    userService.createUser(user);
+
+            return ResponseEntity.ok(savedUser);
+
+        } catch (RuntimeException e) {
+
+            return ResponseEntity
+                    .badRequest()
+                    .body(e.getMessage());
+        }
+    }
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(
+            @RequestBody UserEntity user) {
+
+        String token =
+                userService.loginUser(
+                        user.getEmail(),
+                        user.getPassword());
+
+        if (token != null) {
+
+            return ResponseEntity.ok(token);
         }
 
-        // REGISTER
+        return ResponseEntity
+                .status(401)
+                .body("Invalid email or password");
+    }
 
-        @PostMapping("/register")
-        public ResponseEntity<?> registerUser(
-                        @RequestBody UserEntity user) {
+    // =========================================================
+    // FORGOT PASSWORD
+    // =========================================================
 
-                try {
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody Map<String, String> request) {
 
-                        System.out.println("Name : " + user.getName());
-                        System.out.println("Email : " + user.getEmail());
-                        System.out.println("Role : " + user.getRole());
+        String email =
+                request.get("email");
 
-                        UserEntity savedUser = userService.createUser(user);
+        boolean accountFound =
+                userService.sendPasswordResetOTP(
+                        email);
 
-                        return ResponseEntity
-                                        .ok(savedUser);
+        if (accountFound) {
 
-                } catch (RuntimeException e) {
-
-                        return ResponseEntity
-                                        .badRequest()
-                                        .body(e.getMessage());
-                }
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Account found. OTP has been sent to your email."
+                    ));
         }
 
-        // LOGIN
+        return ResponseEntity
+                .status(404)
+                .body(
+                        Map.of(
+                                "message",
+                                "Account not found"
+                        ));
+    }
 
-        @PostMapping("/login")
-        public ResponseEntity<?> loginUser(
-                        @RequestBody UserEntity user) {
+    // =========================================================
+    // VERIFY OTP
+    // =========================================================
 
-                String token = userService.loginUser(
-                                user.getEmail(),
-                                user.getPassword());
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(
+            @RequestBody Map<String, String> request) {
 
-                if (token != null) {
+        String email =
+                request.get("email");
 
-                        return ResponseEntity.ok(token);
-                }
+        String otp =
+                request.get("otp");
 
-                return ResponseEntity
-                                .status(401)
-                                .body("Invalid email or password");
+        boolean verified =
+                userService.verifyPasswordResetOTP(
+                        email,
+                        otp);
+
+        if (verified) {
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "OTP verified successfully"
+                    ));
         }
 
-        // FORGOT PASSWORD
+        return ResponseEntity
+                .status(400)
+                .body(
+                        Map.of(
+                                "message",
+                                "Invalid or expired OTP"
+                        ));
+    }
 
-        @PostMapping("/forgot-password")
-        public ResponseEntity<?> forgotPassword(
-                        @RequestBody Map<String, String> request) {
+    // =========================================================
+    // RESET PASSWORD
+    // =========================================================
 
-                String email = request.get("email");
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestBody Map<String, String> request) {
 
-                boolean accountFound = userService.sendPasswordResetOTP(email);
+        String email =
+                request.get("email");
 
-                if (accountFound) {
+        String newPassword =
+                request.get("newPassword");
 
-                        return ResponseEntity.ok(
-                                        Map.of(
-                                                        "message",
-                                                        "Account found. OTP has been sent to your email."));
-                }
+        boolean reset =
+                userService.resetPassword(
+                        email,
+                        newPassword);
 
-                return ResponseEntity
-                                .status(404)
-                                .body(Map.of(
-                                                "message",
-                                                "Account not found"));
+        if (reset) {
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Password reset successfully"
+                    ));
         }
 
-        // VERIFY OTP
+        return ResponseEntity
+                .status(400)
+                .body(
+                        Map.of(
+                                "message",
+                                "Password reset failed"
+                        ));
+    }
 
-        @PostMapping("/verify-otp")
-        public ResponseEntity<?> verifyOTP(
-                        @RequestBody Map<String, String> request) {
+    // =========================================================
+    // GET PROFILE
+    // =========================================================
 
-                String email = request.get("email");
-                String otp = request.get("otp");
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile(
+            @RequestHeader(
+                    value = "Authorization",
+                    required = false)
+            String authHeader) {
 
-                boolean verified = userService.verifyPasswordResetOTP(
-                                email,
-                                otp);
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
 
-                if (verified) {
-
-                        return ResponseEntity.ok(
-                                        Map.of(
-                                                        "message",
-                                                        "OTP verified successfully"));
-                }
-
-                return ResponseEntity
-                                .status(400)
-                                .body(Map.of(
-                                                "message",
-                                                "Invalid or expired OTP"));
+            return ResponseEntity
+                    .status(401)
+                    .body(
+                            "Invalid Authorization header");
         }
 
-        // RESET PASSWORD
+        String token =
+                authHeader.substring(7);
 
-        @PostMapping("/reset-password")
-        public ResponseEntity<?> resetPassword(
-                        @RequestBody Map<String, String> request) {
+        try {
 
-                String email = request.get("email");
-                String newPassword = request.get("newPassword");
+            String email =
+                    jwtService.extractEmail(token);
 
-                boolean reset = userService.resetPassword(
-                                email,
-                                newPassword);
+            UserEntity user =
+                    userService.getUserByEmail(email);
 
-                if (reset) {
+            if (user != null) {
 
-                        return ResponseEntity.ok(
-                                        Map.of(
-                                                        "message",
-                                                        "Password reset successfully"));
-                }
+                return ResponseEntity.ok(user);
+            }
 
-                return ResponseEntity
-                                .status(400)
-                                .body(Map.of(
-                                                "message",
-                                                "Password reset failed"));
+            return ResponseEntity
+                    .status(404)
+                    .body("User not found");
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(401)
+                    .body(
+                            "Invalid or expired token");
         }
+    }
 
-        // PROFILE
+    // =========================================================
+    // CHANGE PASSWORD
+    // =========================================================
 
-        @GetMapping("/profile")
-        public ResponseEntity<?> getProfile(
-                        @RequestHeader(value = "Authorization", required = false) String authHeader) {
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
 
-                if (authHeader == null ||
-                                !authHeader.startsWith("Bearer ")) {
+        try {
 
-                        return ResponseEntity
-                                        .status(401)
-                                        .body("Invalid Authorization header");
-                }
+            String currentPassword =
+                    request.get("currentPassword");
 
-                String token = authHeader.substring(7);
+            String newPassword =
+                    request.get("newPassword");
 
-                try {
+            String email =
+                    authentication.getName();
 
-                        String email = jwtService.extractEmail(token);
+            userService.changePassword(
+                    email,
+                    currentPassword,
+                    newPassword);
 
-                        UserEntity user = userService.getUserByEmail(email);
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message",
+                            "Password changed successfully"
+                    ));
 
-                        if (user != null) {
+        } catch (RuntimeException e) {
 
-                                return ResponseEntity.ok(user);
-                        }
-
-                        return ResponseEntity
-                                        .status(404)
-                                        .body("User not found");
-
-                } catch (Exception e) {
-
-                        return ResponseEntity
-                                        .status(401)
-                                        .body("Invalid or expired token");
-                }
+            return ResponseEntity
+                    .badRequest()
+                    .body(
+                            Map.of(
+                                    "message",
+                                    e.getMessage()
+                            ));
         }
+    }
 }

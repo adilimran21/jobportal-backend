@@ -35,6 +35,10 @@ public class UserService {
                 this.emailService = emailService;
         }
 
+        // =========================================================
+        // REGISTER
+        // =========================================================
+
         public UserEntity createUser(UserEntity user) {
 
                 if (user.getEmail() == null ||
@@ -62,6 +66,7 @@ public class UserService {
                         throw new RuntimeException("Role is required");
                 }
 
+                // ADMIN registration is not allowed
                 if (user.getRole().equalsIgnoreCase("ADMIN")) {
 
                         throw new RuntimeException(
@@ -88,6 +93,10 @@ public class UserService {
                 return savedUser;
         }
 
+        // =========================================================
+        // LOGIN
+        // =========================================================
+
         public String loginUser(
                         String email,
                         String password) {
@@ -101,17 +110,25 @@ public class UserService {
                 }
 
                 return userRepository.findByEmail(email)
+
                                 .filter(user -> user.getStatus() != null &&
                                                 user.getStatus()
                                                                 .equalsIgnoreCase("ACTIVE"))
+
                                 .filter(user -> passwordEncoder.matches(
                                                 password,
                                                 user.getPassword()))
+
                                 .map(user -> jwtService.generateToken(
                                                 user.getEmail(),
                                                 user.getRole()))
+
                                 .orElse(null);
         }
+
+        // =========================================================
+        // GET USER BY EMAIL
+        // =========================================================
 
         public UserEntity getUserByEmail(String email) {
 
@@ -119,9 +136,80 @@ public class UserService {
                                 .orElse(null);
         }
 
-        public boolean sendPasswordResetOTP(String email) {
+        // =========================================================
+        // CHANGE PASSWORD
+        // =========================================================
 
-                if (email == null || email.isBlank()) {
+        public boolean changePassword(
+                        String email,
+                        String currentPassword,
+                        String newPassword) {
+
+                if (email == null ||
+                                email.isBlank()) {
+
+                        throw new RuntimeException(
+                                        "User email is required");
+                }
+
+                if (currentPassword == null ||
+                                currentPassword.isBlank()) {
+
+                        throw new RuntimeException(
+                                        "Current password is required");
+                }
+
+                if (newPassword == null ||
+                                newPassword.isBlank()) {
+
+                        throw new RuntimeException(
+                                        "New password is required");
+                }
+
+                if (newPassword.length() < 6) {
+
+                        throw new RuntimeException(
+                                        "New password must contain at least 6 characters");
+                }
+
+                if (currentPassword.equals(newPassword)) {
+
+                        throw new RuntimeException(
+                                        "New password must be different from current password");
+                }
+
+                UserEntity user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new RuntimeException(
+                                                "User not found"));
+
+                // Verify current password
+                if (!passwordEncoder.matches(
+                                currentPassword,
+                                user.getPassword())) {
+
+                        throw new RuntimeException(
+                                        "Current password is incorrect");
+                }
+
+                // Encode and save new password
+                user.setPassword(
+                                passwordEncoder.encode(newPassword));
+
+                userRepository.save(user);
+
+                return true;
+        }
+
+        // =========================================================
+        // FORGOT PASSWORD
+        // =========================================================
+
+        public boolean sendPasswordResetOTP(
+                        String email) {
+
+                if (email == null ||
+                                email.isBlank()) {
+
                         return false;
                 }
 
@@ -138,15 +226,21 @@ public class UserService {
 
                 PasswordResetOTP passwordResetOTP = passwordResetOTPRepository
                                 .findTopByEmailOrderByIdDesc(email)
-                                .orElse(new PasswordResetOTP());
+                                .orElse(
+                                                new PasswordResetOTP());
 
                 passwordResetOTP.setEmail(email);
+
                 passwordResetOTP.setOtp(otp);
+
                 passwordResetOTP.setExpiresAt(
-                                LocalDateTime.now().plusMinutes(5));
+                                LocalDateTime.now()
+                                                .plusMinutes(5));
+
                 passwordResetOTP.setVerified(false);
 
-                passwordResetOTPRepository.save(passwordResetOTP);
+                passwordResetOTPRepository.save(
+                                passwordResetOTP);
 
                 emailService.sendPasswordResetOTP(
                                 email,
@@ -154,6 +248,10 @@ public class UserService {
 
                 return true;
         }
+
+        // =========================================================
+        // VERIFY OTP
+        // =========================================================
 
         public boolean verifyPasswordResetOTP(
                         String email,
@@ -173,6 +271,7 @@ public class UserService {
 
                 if (passwordResetOTP.getExpiresAt()
                                 .isBefore(LocalDateTime.now())) {
+
                         return false;
                 }
 
@@ -182,10 +281,15 @@ public class UserService {
 
                 passwordResetOTP.setVerified(true);
 
-                passwordResetOTPRepository.save(passwordResetOTP);
+                passwordResetOTPRepository.save(
+                                passwordResetOTP);
 
                 return true;
         }
+
+        // =========================================================
+        // RESET PASSWORD
+        // =========================================================
 
         public boolean resetPassword(
                         String email,
@@ -205,11 +309,13 @@ public class UserService {
 
                 if (passwordResetOTP == null ||
                                 !passwordResetOTP.isVerified()) {
+
                         return false;
                 }
 
                 if (passwordResetOTP.getExpiresAt()
                                 .isBefore(LocalDateTime.now())) {
+
                         return false;
                 }
 
@@ -221,11 +327,13 @@ public class UserService {
                 }
 
                 user.setPassword(
-                                passwordEncoder.encode(newPassword));
+                                passwordEncoder.encode(
+                                                newPassword));
 
                 userRepository.save(user);
 
-                passwordResetOTPRepository.delete(passwordResetOTP);
+                passwordResetOTPRepository.delete(
+                                passwordResetOTP);
 
                 return true;
         }

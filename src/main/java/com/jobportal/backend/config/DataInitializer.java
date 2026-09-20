@@ -1,19 +1,26 @@
 package com.jobportal.backend.config;
 
 import com.jobportal.backend.entity.JobCategory;
+import com.jobportal.backend.entity.UserEntity;
 import com.jobportal.backend.repository.JobCategoryRepository;
+import com.jobportal.backend.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
     CommandLineRunner initializeJobCategories(
-            JobCategoryRepository jobCategoryRepository) {
+            JobCategoryRepository jobCategoryRepository,
+            UserRepository userRepository) {
 
         return args -> {
+
+            // Create default Admin account
+            createAdminUser(userRepository);
 
             addCategory(
                     jobCategoryRepository,
@@ -89,6 +96,35 @@ public class DataInitializer {
         };
     }
 
+    private void createAdminUser(UserRepository userRepository) {
+
+        String adminEmail = "admin@naukarido.com";
+
+        if (!userRepository.existsByEmail(adminEmail)) {
+
+            BCryptPasswordEncoder passwordEncoder =
+                    new BCryptPasswordEncoder();
+
+            UserEntity admin = new UserEntity();
+
+            admin.setName("NaukariDo Admin");
+            admin.setEmail(adminEmail);
+            admin.setPassword(
+                    passwordEncoder.encode("Admin@123")
+            );
+            admin.setRole("ADMIN");
+            admin.setStatus("ACTIVE");
+
+            userRepository.save(admin);
+
+            System.out.println("========================================");
+            System.out.println("NaukariDo Admin account created");
+            System.out.println("Email    : " + adminEmail);
+            System.out.println("Password : Admin@123");
+            System.out.println("Role     : ADMIN");
+            System.out.println("========================================");
+        }
+    }
 
     private void addCategory(
             JobCategoryRepository jobCategoryRepository,
